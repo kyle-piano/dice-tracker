@@ -15,14 +15,4 @@ No dependencies, no build step — just one HTML file (Google Fonts are loaded f
 
 Open `index.html` directly in a browser. That's it.
 
-## Deploy (GitHub Pages)
-
-1. Push this repo to GitHub, if you haven't already:
-   ```
-   git remote add origin <your-repo-url>
-   git push -u origin master
-   ```
-2. On GitHub: **Settings → Pages → Source** → "Deploy from a branch" → pick the `master` branch and `/ (root)` folder → **Save**.
-3. GitHub publishes it at `https://<your-username>.github.io/<repo-name>/` within a minute or two.
-
-Any future `git push` to that branch updates the live site automatically.
+## Deploy (GitHub Pages) at: `https://kyle-piano.github.io/<repo-name>/`
