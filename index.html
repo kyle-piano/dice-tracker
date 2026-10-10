@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settlers' Dice Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..600&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap">
+<style>
+  :root{
+    --wood-bg:#2B1D14;
+    --wood-bg-edge:#20150E;
+    --ocean-panel:#173A42;
+    --ocean-panel-edge:#0F2A30;
+    --ivory:#ECE1C8;
+    --ivory-dim:#C9BA98;
+    --ink:#2A1B10;
+    --parchment-text:#F3ECDC;
+    --muted-text:#B7A98C;
+    --robber-red:#C1463A;
+    --wheat-gold:#CC9A3B;
+    --line-subtle:rgba(243,236,220,0.14);
+    --focus-ring:#E4C878;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--wood-bg);
+    background-image:
+      radial-gradient(ellipse at 20% -10%, rgba(23,58,66,0.35), transparent 55%),
+      radial-gradient(ellipse at 100% 110%, rgba(23,58,66,0.25), transparent 50%);
+    color:var(--parchment-text);
+    font-family:"Work Sans", Arial, sans-serif;
+    min-height:100vh;
+    padding:28px 16px 48px;
+    display:flex;
+    justify-content:center;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important;}
+  }
+
+  .page{width:100%;max-width:640px;}
+
+  header{text-align:center;margin-bottom:22px;}
+  .eyebrow{
+    font-family:"Work Sans", Arial, sans-serif;
+    font-size:11.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted-text);
+    margin:0 0 8px;
+  }
+  h1{
+    font-family:"Fraunces", Georgia, serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:clamp(28px,6vw,38px);
+    letter-spacing:0.01em;
+    margin:0 0 10px;
+    text-wrap:balance;
+  }
+  .lede{
+    font-size:14px;
+    line-height:1.55;
+    color:var(--muted-text);
+    max-width:46ch;
+    margin:0 auto;
+  }
+
+  .panel{
+    background:var(--ocean-panel);
+    border:1px solid var(--ocean-panel-edge);
+    border-radius:10px;
+  }
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin:24px 0;
+  }
+  .stat{padding:14px 10px;text-align:center;}
+  .stat .label{
+    font-size:10.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--muted-text);
+    margin:0 0 6px;
+  }
+  .stat .value{
+    font-family:"IBM Plex Mono", monospace;
+    font-variant-numeric:tabular-nums;
+    font-weight:600;
+    font-size:clamp(18px,4.2vw,24px);
+    margin:0;
+  }
+  .stat .sub{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    color:var(--ivory-dim);
+    margin:2px 0 0;
+  }
+
+  section.block{margin:26px 0;}
+  .block-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .block-title{
+    font-family:"Fraunces", Georgia, serif;
+    font-weight:600;
+    font-size:17px;
+    margin:0;
+  }
+  .block-note{
+    font-size:12px;
+    color:var(--muted-text);
+    margin:0;
+  }
+
+  /* Number tokens */
+  .pad{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    padding:6px 2px;
+  }
+  .token{
+    position:relative;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+    background:var(--ivory);
+    color:var(--ink);
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.35);
+    transition:transform 120ms ease, box-shadow 120ms ease;
+    font-family:"IBM Plex Mono", monospace;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .token:hover{transform:translateY(-2px);}
+  .token:active{transform:translateY(0) scale(0.96);}
+  .token:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
+  .token .num{font-weight:700;font-size:19px;line-height:1;}
+  .token.hot .num{color:var(--robber-red);}
+  .pips{display:flex;gap:2px;height:5px;align-items:center;}
+  .pip{width:3.5px;height:3.5px;border-radius:50%;background:var(--ink);opacity:0.55;}
+  .token.hot .pip{background:var(--robber-red);opacity:0.8;}
+
+  .token.robber{
+    background:var(--wood-bg-edge);
+    color:var(--parchment-text);
+    border:2px solid var(--robber-red);
+    box-shadow:0 2px 4px rgba(0,0,0,0.45);
+  }
+  .token.robber .num{color:var(--parchment-text);}
+  .token.robber .tag{
+    font-family:"Work Sans", sans-serif;
+    font-size:8px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--robber-red);
+  }
+
+  .badge{
+    position:absolute;
+    top:-6px;
+    right:-6px;
+    min-width:18px;
+    height:18px;
+    padding:0 4px;
+    border-radius:9px;
+    background:var(--wheat-gold);
+    color:var(--ink);
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:700;
+    font-size:10.5px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1.5px solid var(--wood-bg);
+  }
+
+  /* Chart */
+  .chart-wrap{padding:16px 14px 10px;position:relative;}
+  .chart-row{display:flex;gap:8px;}
+  .y-axis{
+    width:26px;
+    flex:none;
+    position:relative;
+    height:190px;
+  }
+  .y-axis .ylabel{
+    position:absolute;
+    left:0;
+    right:2px;
+    text-align:right;
+    transform:translateY(50%);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:9.5px;
+    color:var(--muted-text);
+  }
+  .chart-col-wrap{flex:1;min-width:0;}
+  .chart{
+    display:flex;
+    align-items:flex-end;
+    gap:6px;
+    height:190px;
+    border-bottom:1px solid var(--line-subtle);
+    position:relative;
+  }
+  .gridline{
+    position:absolute;
+    left:0;right:0;
+    border-top:1px dashed var(--line-subtle);
+  }
+  .col{
+    flex:1;
+    height:100%;
+    position:relative;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    cursor:default;
+  }
+  .col:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;}
+  .bar{
+    width:62%;
+    background:var(--wheat-gold);
+    border-radius:4px 4px 0 0;
+    transition:height 200ms ease;
+    position:relative;
+  }
+  .bar-label{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:9.5px;
+    color:var(--parchment-text);
+    white-space:nowrap;
+  }
+  .expected-tick{
+    position:absolute;
+    left:8%;
+    right:8%;
+    height:2px;
+    background:var(--ivory);
+    border-radius:1px;
+  }
+  .expected-tick::before, .expected-tick::after{
+    content:"";
+    position:absolute;
+    top:-2px;
+    width:2px;
+    height:6px;
+    background:var(--ivory);
+  }
+  .expected-tick::before{left:0;}
+  .expected-tick::after{right:0;}
+
+  .axis{
+    display:flex;
+    gap:6px;
+    margin-top:8px;
+  }
+  .axis-label{
+    flex:1;
+    text-align:center;
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:600;
+    font-size:12px;
+    color:var(--ivory-dim);
+  }
+  .axis-label.hot{color:var(--robber-red);}
+  .axis-label.robber{color:var(--muted-text);font-size:10px;font-style:italic;font-family:"Work Sans",sans-serif;}
+
+  .legend{
+    display:flex;
+    gap:18px;
+    justify-content:center;
+    margin-top:14px;
+    font-size:12px;
+    color:var(--muted-text);
+  }
+  .legend-item{display:flex;align-items:center;gap:6px;}
+  .swatch{width:11px;height:11px;border-radius:2px;flex:none;}
+  .swatch.actual{background:var(--wheat-gold);}
+  .swatch.expected{background:var(--ivory);height:2px;width:14px;border-radius:1px;}
+
+  .tooltip{
+    position:absolute;
+    pointer-events:none;
+    background:var(--wood-bg-edge);
+    border:1px solid var(--line-subtle);
+    border-radius:6px;
+    padding:8px 10px;
+    font-size:11.5px;
+    line-height:1.5;
+    color:var(--parchment-text);
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+    opacity:0;
+    transform:translate(-50%,-6px);
+    transition:opacity 120ms ease;
+    z-index:5;
+    white-space:nowrap;
+  }
+  .tooltip.show{opacity:1;}
+  .tooltip strong{font-family:"IBM Plex Mono",monospace;}
+
+  details.table-toggle{margin-top:14px;}
+  details.table-toggle summary{
+    cursor:pointer;
+    font-size:12.5px;
+    color:var(--ivory-dim);
+    user-select:none;
+  }
+  details.table-toggle summary:focus-visible{outline:2px solid var(--focus-ring);}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+  }
+  table caption{text-align:left;font-size:11px;color:var(--muted-text);margin-bottom:6px;}
+  th,td{
+    text-align:right;
+    padding:5px 6px;
+    border-bottom:1px solid var(--line-subtle);
+    font-variant-numeric:tabular-nums;
+  }
+  th:first-child, td:first-child{text-align:left;}
+  th{color:var(--muted-text);font-weight:600;font-size:10.5px;letter-spacing:0.04em;text-transform:uppercase;}
+  .table-scroll{overflow-x:auto;}
+
+  footer{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    margin-top:28px;
+  }
+  button.action{
+    font-family:"Work Sans", sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:10px 18px;
+    border-radius:8px;
+    border:1px solid var(--ocean-panel-edge);
+    background:var(--ocean-panel);
+    color:var(--parchment-text);
+    cursor:pointer;
+    transition:background 120ms ease, opacity 120ms ease;
+  }
+  button.action:hover:not(:disabled){background:var(--ocean-panel-edge);}
+  button.action:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;}
+  button.action:disabled{opacity:0.4;cursor:not-allowed;}
+  button.action.danger{border-color:var(--robber-red);}
+  button.action.danger:hover:not(:disabled){background:rgba(193,70,58,0.25);}
+
+  .foot-note{
+    text-align:center;
+    font-size:11px;
+    color:var(--muted-text);
+    margin-top:14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">Catan companion</p>
+    <h1>Settlers' Dice Ledger</h1>
+    <p class="lede">Tap the number as it's rolled. The ivory tick on each bar marks the true 2d6 odds, so you can see how tonight's dice compare to the long run.</p>
+  </header>
+
+  <div class="stats">
+    <div class="panel stat">
+      <p class="label">Total Rolls</p>
+      <p class="value" id="statTotal">0</p>
+    </div>
+    <div class="panel stat">
+      <p class="label">Most Rolled</p>
+      <p class="value" id="statMost">—</p>
+      <p class="sub" id="statMostSub">&nbsp;</p>
+    </div>
+    <div class="panel stat">
+      <p class="label">Least Rolled</p>
+      <p class="value" id="statLeast">—</p>
+      <p class="sub" id="statLeastSub">&nbsp;</p>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-head">
+      <h2 class="block-title">Tally a roll</h2>
+      <p class="block-note">pips = standard token odds</p>
+    </div>
+    <div class="pad" id="pad" role="group" aria-label="Record a dice roll"></div>
+  </section>
+
+  <section class="block">
+    <div class="panel chart-wrap">
+      <div class="block-head">
+        <h2 class="block-title">Actual vs. expected</h2>
+      </div>
+      <div class="chart-row">
+        <div class="y-axis" id="yAxis"></div>
+        <div class="chart-col-wrap">
+          <div class="chart" id="chart" aria-hidden="false"></div>
+          <div class="axis" id="axis"></div>
+        </div>
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="swatch actual"></span>Rolled this game</span>
+        <span class="legend-item"><span class="swatch expected"></span>Expected (2d6 odds)</span>
+      </div>
+      <details class="table-toggle">
+        <summary>View as table</summary>
+        <div class="table-scroll">
+          <table>
+            <caption>Full tally, one row per sum</caption>
+            <thead>
+              <tr><th scope="col">Sum</th><th scope="col">Rolled</th><th scope="col">Actual %</th><th scope="col">Expected %</th><th scope="col">Diff</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </details>
+      <div class="tooltip" id="tooltip" role="tooltip"></div>
+    </div>
+  </section>
+
+  <footer>
+    <button class="action" id="undoBtn">Undo last roll</button>
+    <button class="action danger" id="resetBtn">Reset game</button>
+  </footer>
+  <p class="foot-note">Saved on this device only — resets clear it for good.</p>
+</div>
+
+<script>
+(function(){
+  var NUMBERS = [2,3,4,5,6,7,8,9,10,11,12];
+  var WAYS = {2:1,3:2,4:3,5:4,6:5,7:6,8:5,9:4,10:3,11:2,12:1};
+  var STORE_KEY = "settlers-dice-ledger-v1";
+
+  var state = { counts: {}, history: [] };
+  NUMBERS.forEach(function(n){ state.counts[n] = 0; });
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(!raw) return;
+      var parsed = JSON.parse(raw);
+      if(parsed && parsed.counts){
+        NUMBERS.forEach(function(n){ state.counts[n] = parsed.counts[n] || 0; });
+        state.history = Array.isArray(parsed.history) ? parsed.history : [];
+      }
+    }catch(e){ /* ignore corrupt storage */ }
+  }
+  function save(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  function total(){
+    return NUMBERS.reduce(function(sum,n){ return sum + state.counts[n]; }, 0);
+  }
+  function expectedPct(n){ return WAYS[n] / 36 * 100; }
+  function actualPct(n){
+    var t = total();
+    return t === 0 ? 0 : state.counts[n] / t * 100;
+  }
+  function fmt(pct){ return (Math.round(pct*10)/10).toFixed(1) + "%"; }
+
+  var pad = document.getElementById("pad");
+  var chart = document.getElementById("chart");
+  var yAxis = document.getElementById("yAxis");
+  var axis = document.getElementById("axis");
+  var tooltip = document.getElementById("tooltip");
+  var tableBody = document.getElementById("tableBody");
+
+  function robberIcon(){
+    return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">' +
+      '<circle cx="8" cy="5" r="3" fill="currentColor"/>' +
+      '<path d="M3 15c0-3.3 2.2-6 5-6s5 2.7 5 6" fill="currentColor"/>' +
+      '</svg>';
+  }
+
+  function buildPad(){
+    pad.innerHTML = "";
+    NUMBERS.forEach(function(n){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.num = n;
+      var hot = (n === 6 || n === 8);
+      var isRobber = (n === 7);
+      btn.className = "token" + (hot ? " hot" : "") + (isRobber ? " robber" : "");
+
+      var inner = '<span class="num">' + n + '</span>';
+      if(isRobber){
+        inner += '<span class="tag">' + robberIcon() + ' robber</span>';
+      } else {
+        var dots = "";
+        for(var i=0;i<WAYS[n];i++){ dots += '<span class="pip"></span>'; }
+        inner += '<span class="pips">' + dots + '</span>';
+      }
+      inner += '<span class="badge" style="display:none" data-badge></span>';
+      btn.innerHTML = inner;
+
+      btn.setAttribute("aria-label", "Record a roll of " + n + (isRobber ? " (robber)" : "") + ". Rolled " + state.counts[n] + " times so far.");
+      btn.addEventListener("click", function(){
+        state.counts[n]++;
+        state.history.push(n);
+        save();
+        renderAll();
+      });
+      pad.appendChild(btn);
+    });
+  }
+
+  function renderPad(){
+    NUMBERS.forEach(function(n){
+      var btn = pad.querySelector('[data-num="' + n + '"]');
+      var badge = btn.querySelector("[data-badge]");
+      var c = state.counts[n];
+      if(c > 0){
+        badge.style.display = "flex";
+        badge.textContent = c;
+      } else {
+        badge.style.display = "none";
+      }
+      btn.setAttribute("aria-label", "Record a roll of " + n + (n===7 ? " (robber)" : "") + ". Rolled " + c + " times so far.");
+    });
+  }
+
+  function renderStats(){
+    var t = total();
+    document.getElementById("statTotal").textContent = t;
+
+    if(t === 0){
+      document.getElementById("statMost").textContent = "—";
+      document.getElementById("statMostSub").innerHTML = "&nbsp;";
+      document.getElementById("statLeast").textContent = "—";
+      document.getElementById("statLeastSub").innerHTML = "&nbsp;";
+      return;
+    }
+    var most = NUMBERS[0], least = NUMBERS[0];
+    NUMBERS.forEach(function(n){
+      if(state.counts[n] > state.counts[most]) most = n;
+      if(state.counts[n] < state.counts[least]) least = n;
+    });
+    document.getElementById("statMost").textContent = most;
+    document.getElementById("statMostSub").textContent = state.counts[most] + "x rolled";
+    document.getElementById("statLeast").textContent = least;
+    document.getElementById("statLeastSub").textContent = state.counts[least] + "x rolled";
+  }
+
+  function renderChart(){
+    var maxActual = 0;
+    NUMBERS.forEach(function(n){ maxActual = Math.max(maxActual, actualPct(n)); });
+    var scaleMax = Math.max(20, Math.ceil((maxActual + 5) / 5) * 5);
+
+    chart.innerHTML = "";
+    yAxis.innerHTML = "";
+    [5,10,15,20,25,30,35].forEach(function(g){
+      if(g >= scaleMax) return;
+      var line = document.createElement("div");
+      line.className = "gridline";
+      line.style.bottom = (g / scaleMax * 100) + "%";
+      chart.appendChild(line);
+
+      var label = document.createElement("span");
+      label.className = "ylabel";
+      label.style.bottom = (g / scaleMax * 100) + "%";
+      label.textContent = g + "%";
+      yAxis.appendChild(label);
+    });
+
+    axis.innerHTML = "";
+
+    NUMBERS.forEach(function(n){
+      var ap = actualPct(n), ep = expectedPct(n);
+      var col = document.createElement("div");
+      col.className = "col";
+      col.tabIndex = 0;
+      col.setAttribute("role", "img");
+      col.setAttribute("aria-label",
+        "Sum " + n + ": rolled " + state.counts[n] + " times, " + fmt(ap) + " of rolls this game. Expected " + fmt(ep) + " over the long run.");
+
+      var tick = document.createElement("div");
+      tick.className = "expected-tick";
+      tick.style.bottom = (ep / scaleMax * 100) + "%";
+      col.appendChild(tick);
+
+      var bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.height = (ap / scaleMax * 100) + "%";
+      if(state.counts[n] > 0){
+        var label = document.createElement("span");
+        label.className = "bar-label";
+        label.style.bottom = "calc(" + (Math.max(ap, ep) / scaleMax * 100) + "% + 6px)";
+        label.textContent = fmt(ap);
+        col.appendChild(label);
+      }
+      col.appendChild(bar);
+
+      col.addEventListener("mouseenter", function(){ showTooltip(col, n, ap, ep); });
+      col.addEventListener("mousemove", function(e){ positionTooltip(e); });
+      col.addEventListener("mouseleave", hideTooltip);
+      col.addEventListener("focus", function(){ showTooltip(col, n, ap, ep); });
+      col.addEventListener("blur", hideTooltip);
+
+      chart.appendChild(col);
+
+      var axisLabel = document.createElement("div");
+      axisLabel.className = "axis-label" + (n===6||n===8 ? " hot" : "") + (n===7 ? " robber" : "");
+      axisLabel.textContent = n===7 ? "7 ♟" : n;
+      axis.appendChild(axisLabel);
+    });
+  }
+
+  function showTooltip(col, n, ap, ep){
+    tooltip.innerHTML = "<strong>Sum " + n + "</strong><br>Rolled " + state.counts[n] + "x &middot; " + fmt(ap) + " actual<br>" + fmt(ep) + " expected";
+    tooltip.classList.add("show");
+    var chartRect = chart.parentElement.getBoundingClientRect();
+    var colRect = col.getBoundingClientRect();
+    tooltip.style.left = (colRect.left - chartRect.left + colRect.width/2) + "px";
+    tooltip.style.top = (colRect.top - chartRect.top - 8) + "px";
+  }
+  function positionTooltip(e){
+    var chartRect = chart.parentElement.getBoundingClientRect();
+    tooltip.style.left = (e.clientX - chartRect.left) + "px";
+  }
+  function hideTooltip(){ tooltip.classList.remove("show"); }
+
+  function renderTable(){
+    tableBody.innerHTML = "";
+    NUMBERS.forEach(function(n){
+      var ap = actualPct(n), ep = expectedPct(n);
+      var diff = ap - ep;
+      var sign = diff > 0 ? "+" : "";
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + n + (n===7?" (robber)":"") + "</td><td>" + state.counts[n] + "</td><td>" + fmt(ap) + "</td><td>" + fmt(ep) + "</td><td>" + sign + (Math.round(diff*10)/10) + "pp</td>";
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function renderAll(){
+    renderPad();
+    renderStats();
+    renderChart();
+    renderTable();
+    undoBtn.disabled = state.history.length === 0;
+  }
+
+  var undoBtn = document.getElementById("undoBtn");
+  var resetBtn = document.getElementById("resetBtn");
+
+  undoBtn.addEventListener("click", function(){
+    if(state.history.length === 0) return;
+    var last = state.history.pop();
+    state.counts[last] = Math.max(0, state.counts[last] - 1);
+    save();
+    renderAll();
+  });
+
+  var resetArmed = false;
+  var resetTimer = null;
+
+  function armReset(){
+    resetArmed = true;
+    resetBtn.textContent = "Tap again to confirm";
+    resetTimer = setTimeout(disarmReset, 4000);
+  }
+  function disarmReset(){
+    resetArmed = false;
+    resetBtn.textContent = "Reset game";
+    clearTimeout(resetTimer);
+  }
+
+  resetBtn.addEventListener("click", function(){
+    if(total() === 0) return;
+    if(!resetArmed){
+      armReset();
+      return;
+    }
+    disarmReset();
+    NUMBERS.forEach(function(n){ state.counts[n] = 0; });
+    state.history = [];
+    save();
+    renderAll();
+  });
+  resetBtn.addEventListener("blur", disarmReset);
+
+  load();
+  buildPad();
+  renderAll();
+})();
+</script>
+</body>
+</html>
