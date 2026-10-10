@@ -15,4 +15,4 @@ No dependencies, no build step — just one HTML file (Google Fonts are loaded f
 
 Open `index.html` directly in a browser. That's it.
 
-## Deploy (GitHub Pages) at: `https://kyle-piano.github.io/<repo-name>/`
+## Deploy (GitHub Pages) at: `https://kyle-piano.github.io/dice-tracker/`
